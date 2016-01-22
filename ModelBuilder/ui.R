@@ -10,7 +10,8 @@ shinyUI(fluidPage(
       sliderInput("year_range", "Year Range:", 
                   min = min(data$Year), max = max(data$Year), 
                   value = c(min(data$Year), max(data$Year)),
-                  sep="")
+                  sep=""),
+      checkboxInput('Aggregate', label = 'Aggregate Data by Annual Mean?')
       # selectInput('x', 'Build a regression model of mpg against:',
                   # choices = names(mtcars)[-1]),
       # radioButtons('format', 'Document format', c('PDF', 'HTML', 'Word'),
@@ -19,6 +20,7 @@ shinyUI(fluidPage(
     ),
     mainPanel(
       tabsetPanel(
+        tabPanel('DataTable', dataTableOutput('datatable') ),
         tabPanel('Correlation Matrix', plotOutput('corplot') ),
         tabPanel('Mutiple Regression Builder', 
                  plotOutput('regplot'),

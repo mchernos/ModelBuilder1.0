@@ -1,7 +1,25 @@
 shinyServer(function(input, output) {
 
   LiveData <- reactive({
-    data %>% filter(Year %in% input$year_range[1]:input$year_range[2])})
+    # Filter by Year
+    data = data %>% 
+      filter(Year %in% input$year_range[1]:input$year_range[2])
+    
+    # T/F to Aggregate into annual means
+    if (input$Aggregate){ 
+      data = data %>%
+        gather(Stat, Value,  -row, -col, -Year) %>%
+        group_by(Year, Stat) %>% 
+        summarise(Value = mean(Value)) %>% 
+        spread(key = Stat, value =Value)
+    }
+    
+    # Return Data in Data.frame() format
+    data.frame(data)
+    })
+  
+  # Data Table
+  output$datatable <- renderDataTable( LiveData() )
   
   # Correlation Matrix
   output$corplot <- renderPlot({
@@ -16,8 +34,10 @@ shinyServer(function(input, output) {
   # predictand <- reactive({input$predictand}) 
   model_output <- reactive({
     fit <- lm(LiveData()[,input$predictand]~. , 
-              data=LiveData()[,!(colnames(LiveData()) %in% c('row', 'col', 'Year', input$predictand) ) ]   )
-    stepAIC(fit, scope = list(upper = fit, lower = ~1), direction="both", steps = 1000)
+              data=LiveData()[,!(colnames(LiveData()) %in% 
+                                   c('row', 'col', 'Year', input$predictand) ) ]   )
+    stepAIC(fit, scope = list(upper = fit, lower = ~1), 
+            direction="both", steps = 1000)
     # step
     # fit.plot(data$fish_habitat, step)
   })

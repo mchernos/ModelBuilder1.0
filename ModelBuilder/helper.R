@@ -39,11 +39,29 @@ read.data = function(filename){
 }
 
 # Read in and merge all datasets
-data = lapply(filelist, function(x) read.data(x)) %>%
-  Reduce(function(x,y) full_join(x,y, by = c('row', 'col', 'Year')), .)
-data$Year = as.numeric(data$Year)
+# data = lapply(filelist, function(x) read.data(x)) %>%
+#   Reduce(function(x,y) full_join(x,y, by = c('row', 'col', 'Year')), .)
+
+# Y = F
+# 
+# data = data %>%
+#   filter(Year %in% 1900:1930)
+# if (Y){ 
+# data = data %>%
+#   gather(Stat, Value,  -row, -col, -Year) %>%
+#   group_by(Year, Stat) %>% 
+#   summarise(Value = mean(Value)) %>% 
+#   spread(key = Stat, value =Value)
+# }
+# 
+# 
+# X %>% 
+#   add(1) %>% 
+#   {if(Y) add(1) else .}
 
 # data = data[sample(nrow(data), 1000), ]
-# data = read.csv('Data/data.csv')
+# TEMP DATA
+data = read.csv('Data/data.csv')
 
 # ggplot(aes(x = row, y = col, colour = fish_habitat), data = data) + geom_point()
+data$Year = as.numeric(data$Year)
