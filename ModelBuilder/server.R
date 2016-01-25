@@ -1,25 +1,44 @@
 shinyServer(function(input, output) {
 
   LiveData <- reactive({
+    ##################
+    # Aggregate Data #
+    ##################
+    if (input$Aggregate != 'None'){ 
+      data = data %>%
+        gather(Stat, Value,  -row, -col, -Year) %>%
+        group_by(Year, Stat)
+      
+      if(input$Aggregate == 'Mean')   {
+        data =data %>% 
+          summarise(Value = mean(Value)) %>% 
+          spread(key = Stat, value =Value) }
+      
+      if(input$Aggregate == 'Median')  {
+        data = data %>% 
+        summarise(Value = median(Value)) %>% 
+        spread(key = Stat, value =Value) }
+      
+      if(input$Aggregate == 'Sum')     {
+        data = data %>% 
+        summarise(Value = sum(Value)) %>% 
+        spread(key = Stat, value =Value) }
+    }
+    
     # Filter by Year
     data = data %>% 
       filter(Year %in% input$year_range[1]:input$year_range[2])
-    
-    # T/F to Aggregate into annual means
-    if (input$Aggregate){ 
-      data = data %>%
-        gather(Stat, Value,  -row, -col, -Year) %>%
-        group_by(Year, Stat) %>% 
-        summarise(Value = mean(Value)) %>% 
-        spread(key = Stat, value =Value)
-    }
+    # Filter by predictand range
+    data = filter(data, data[,input$predictand] >= input$min_data & 
+                    data[,input$predictand] <= input$max_data )
     
     # Return Data in Data.frame() format
     data.frame(data)
-    })
+    
+  })
   
   # Data Table
-  output$datatable <- renderDataTable( LiveData() )
+  output$datatable <- renderDataTable({ LiveData() })
   
   # Correlation Matrix
   output$corplot <- renderPlot({
@@ -59,11 +78,25 @@ shinyServer(function(input, output) {
 
   output$time_plot <- renderPlot({
     plot(LiveData()[,'Year'], LiveData()[,input$predictand], 
-         pch = 19, col = rgb(0,0,0,0.6))
+         pch = 19, col = rgb(0,0,0,0.6),
+         xlab = '', ylab = input$predictand)
     # abline(lm(Year~input$predictand, data = LiveData()), col = 'red')
   })
   
   output$mannkendall <- renderPrint({ return(MannKendall(LiveData()[,input$predictand])) })
+  
+  ########################
+  # Distribution Fitting #
+  ######################## 
+  
+  output$histogram <- renderPlot({ 
+    hist(LiveData()[,input$predictand],
+         xlab = input$predictand,
+         main = '',
+         col = 'navy',
+         breaks = input$n_breaks) 
+    })
+  
   
 })# END SERVER
 
