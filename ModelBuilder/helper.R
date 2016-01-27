@@ -1,28 +1,34 @@
 # Alces Correlations to Riparian Health
+# Clean up workspace
 rm(list = ls())
-library('shiny')
-library('dplyr')
-library('tidyr')
-library('corrplot')                     # package corrplot
-library('MASS')
-library('Kendall')
+
+# Check for installed packages (install if need be)
+packages = c('shiny', 'dplyr', 'tidyr','corrplot', 'DT', 
+             'MASS', 'ggplot2', 'Kendall', 'fitdistrplus')
+x = lapply(packages, function(x){if (!require(x, character.only = T)) install.packages(x)})
+x = lapply(packages, require, character.only = T)
+rm(x, packages)
 
 
-# Fit Plot FUNCTION
+# Fit Plot Function
 fit.plot = function(predictand, x){
-  par(mfrow = c(1,2))
+  
   # Plot Predicted Model against Observed Values
-  plot(predictand, x$fitted.values, pch = 19,  # NEED TO FIX
+  plot(na.omit(predictand), x$fitted.values, pch = 19, 
        xlab = 'Observed', ylab = 'Predicted',
        col = rgb(0,0,0,0.6),
        main = '')
+  mtext('Predicted vs. Modelled', 3)
   abline(0,1, col = 'red', lwd = 2)
   
   # Plot Residuals
-  plot(x$residuals, pch = 19, ylab = 'Residuals', col = rgb(0,0,0,0.6))
+  plot(x$residuals, pch = 19, ylab = 'Residuals', 
+       col = rgb(0,0,0,0.6),
+       main = '')
+  mtext('Indexed Residuals', 3)
+  
   abline(h = 0, lwd = 2, lty = 2, col = 'red')
 }
-
 
 ####################
 # Read in the Data #
@@ -42,26 +48,10 @@ read.data = function(filename){
 # data = lapply(filelist, function(x) read.data(x)) %>%
 #   Reduce(function(x,y) full_join(x,y, by = c('row', 'col', 'Year')), .)
 
-# Y = F
-# 
-# data = data %>%
-#   filter(Year %in% 1900:1930)
-# if (Y){ 
-# data = data %>%
-#   gather(Stat, Value,  -row, -col, -Year) %>%
-#   group_by(Year, Stat) %>% 
-#   summarise(Value = mean(Value)) %>% 
-#   spread(key = Stat, value =Value)
-# }
-# 
-# 
-# X %>% 
-#   add(1) %>% 
-#   {if(Y) add(1) else .}
-
 # data = data[sample(nrow(data), 1000), ]
+
 # TEMP DATA
-data = read.csv('Data/data.csv')
+data = read.csv('Data/data2.csv')
 
 # ggplot(aes(x = row, y = col, colour = fish_habitat), data = data) + geom_point()
 data$Year = as.numeric(data$Year)

@@ -1,87 +1,104 @@
 shinyServer(function(input, output) {
-
+  
+  ##################
+  # Aggregate Data #
+  ##################
   LiveData <- reactive({
-    ##################
-    # Aggregate Data #
-    ##################
+    
+    # Code Value as NA
+    if(input$code_zero){
+      data[,input$predictand] = ifelse(data[,input$predictand] == 0, NA, 
+                                       data[,input$predictand] ) }
+    if(input$code_one){
+      data[,input$predictand] = ifelse(data[,input$predictand] == 1, NA, 
+                                       data[,input$predictand] ) }
+    
+    # Conditional Aggregation Methods 
     if (input$Aggregate != 'None'){ 
       data = data %>%
         gather(Stat, Value,  -row, -col, -Year) %>%
         group_by(Year, Stat)
       
       if(input$Aggregate == 'Mean')   {
-        data =data %>% 
-          summarise(Value = mean(Value)) %>% 
+        data = data %>% 
+          summarise(Value = mean(Value, na.rm = T)) %>% 
           spread(key = Stat, value =Value) }
       
       if(input$Aggregate == 'Median')  {
         data = data %>% 
-        summarise(Value = median(Value)) %>% 
-        spread(key = Stat, value =Value) }
+          summarise(Value = median(Value, na.rm = T)) %>% 
+          spread(key = Stat, value =Value) }
       
       if(input$Aggregate == 'Sum')     {
         data = data %>% 
-        summarise(Value = sum(Value)) %>% 
-        spread(key = Stat, value =Value) }
+          summarise(Value = sum(Value, na.rm = T)) %>% 
+          spread(key = Stat, value =Value) }
     }
     
     # Filter by Year
-    data = data %>% 
-      filter(Year %in% input$year_range[1]:input$year_range[2])
+    data = data %>% filter(Year %in% input$year_range[1]:input$year_range[2])
+    
     # Filter by predictand range
     data = filter(data, data[,input$predictand] >= input$min_data & 
                     data[,input$predictand] <= input$max_data )
     
-    # Return Data in Data.frame() format
+    # Logarithm Transform Predictand
+#     data[,input$predictand] = ifelse(input$log_transform == T,
+#                                      log10(data[,input$predictand]),
+#                                      data[,input$predictand])
+#     
+    # Return Data in data.frame() format
     data.frame(data)
-    
   })
   
   # Data Table
-  output$datatable <- renderDataTable({ LiveData() })
+  output$datatable <- DT::renderDataTable({ 
+    DT::datatable( LiveData(), rownames = FALSE,
+                   options = list(searching = F, 
+                                  lengthMenu = c(10, 50,100)) ) })
   
   # Correlation Matrix
   output$corplot <- renderPlot({
-
+    
     cor_matrix = cor(LiveData()[,!(colnames(LiveData()) %in% 
                                      c('row', 'col', 'Year'))]) # get correlations
     corrplot(cor_matrix, method = "ellipse", order = 'AOE') # plot matrix
-    })
-
-
+  })
+  
+  
   # MULTIVARIATE REGRESSION
-  # predictand <- reactive({input$predictand}) 
   model_output <- reactive({
     fit <- lm(LiveData()[,input$predictand]~. , 
               data=LiveData()[,!(colnames(LiveData()) %in% 
                                    c('row', 'col', 'Year', input$predictand) ) ]   )
-    stepAIC(fit, scope = list(upper = fit, lower = ~1), 
-            direction="both", steps = 1000)
-    # step
-    # fit.plot(data$fish_habitat, step)
+    step = stepAIC(fit, scope = list(upper = fit, lower = ~1), 
+                   direction="both", steps = 1000, trace = F)
+    return(step)
   })
   
   # Regression Plot
-  output$regplot <- renderPlot({
-    fit.plot(LiveData()[,input$predictand], model_output() )
-    mtext(input$predictand, font = 2, cex = 2, adj = -1)
-    })
-    # Stepwise Regression uing AIC as criterion
-    # step$anova          # display results
-    # summary(step)
-
-  output$stat_summary <- renderPrint({ return(summary(model_output() )     )  })
+  output$regplot <- renderPlot({ 
+    par(mfrow = c(1,2))
+    fit.plot(LiveData()[,input$predictand], model_output() )  })
+  
+  output$full_regplot <- renderPlot({ par(mfrow = c(2,2)); plot(model_output()) })
+  
+  # Model Output
+  output$stat_summary <- renderPrint({ return(summary( model_output() ) )  })
+  output$model_anova <- renderPrint({  model_output()$anova })
   
   ########################
   # Time Series Analysis #
   ########################
-
+  
   output$time_plot <- renderPlot({
-    plot(LiveData()[,'Year'], LiveData()[,input$predictand], 
-         pch = 19, col = rgb(0,0,0,0.6),
-         xlab = '', ylab = input$predictand)
-    # abline(lm(Year~input$predictand, data = LiveData()), col = 'red')
-  })
+    LiveData() %>%
+      ggplot(aes(x = Year, y = get(input$predictand))) + 
+      geom_point() + 
+      labs(y = input$predictand) + 
+      theme_bw() + 
+      stat_smooth(method = input$smooth_method)
+    })
   
   output$mannkendall <- renderPrint({ return(MannKendall(LiveData()[,input$predictand])) })
   
@@ -89,14 +106,30 @@ shinyServer(function(input, output) {
   # Distribution Fitting #
   ######################## 
   
-  output$histogram <- renderPlot({ 
-    hist(LiveData()[,input$predictand],
-         xlab = input$predictand,
-         main = '',
-         col = 'navy',
-         breaks = input$n_breaks) 
-    })
+  fitted_distribution <- reactive({
+    fitdist( LiveData()[,input$predictand], input$distribution, 
+             method = input$fit_method)
+  })
   
+  # Histogram
+  output$histogram <- renderPlot({
+    denscomp(fitted_distribution(), probability = F, 
+             xlab = input$predictand, datacol = 'navy',
+             legendtext = input$distribution)
+  })
+  
+  # Summary Stats
+  output$distribution_summary <- renderPrint({
+    list(summary(fitted_distribution() ),
+         gofstat(fitted_distribution() ),
+         if(input$distribution == 'norm'){
+           shapiro.test(LiveData()[,input$predictand])
+         }else {NA}
+    ) })
+  
+  #   distrb = list('norm', 'gamma', 'lnorm', 'weibull', 'nbinom', 'pois')
+  #   x = distrb[[1]]
+  #   
   
 })# END SERVER
 
