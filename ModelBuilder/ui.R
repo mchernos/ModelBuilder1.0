@@ -34,12 +34,18 @@ shinyUI(fluidPage(
     ),
     mainPanel(
       tabsetPanel(
+        
+        # RAW DATA TABLE
         tabPanel('DataTable', DT::dataTableOutput('datatable') ),
+       
+         # CORRELATION MATRIX
         tabPanel('Correlation Matrix', 
                  plotOutput('corplot'),
                  checkboxInput('print_cor', 'Display Correlation Matrix?'),
                  uiOutput('correlation_table')),
-        tabPanel('Mutiple Regression Builder', 
+       
+        # MULTIPLE REGRESSION AUTOMATOR
+         tabPanel('Mutiple Regression Builder', 
                  plotOutput('regplot'),
                  plotOutput('full_regplot'),
                  h4('Model Output'),
@@ -50,18 +56,26 @@ shinyUI(fluidPage(
                  verbatimTextOutput('model_deva'),
                  h4('Model Anova'),
                  verbatimTextOutput('model_anova')),
-        tabPanel('Trend Analysis', 
-               selectInput('smooth_method', 'Smoothing Method',
-                           choices = c('Linear' = 'lm', 
-                                       'Generalized Linear' = 'glm',
-                                       'General Additive' =  'gam', 
-                                       'Local Polynomial' = 'loess',
-                                       'Robust Linear' = 'rlm'),
-                           selected = 'loess'),
-                 plotOutput('time_plot'),
-                  DT::dataTableOutput('summary_variables'),
-                 h4('Mann Kendall Test:'),
-                 verbatimTextOutput('mannkendall')),
+       
+       # TREND ANALYSIS
+         tabPanel('Trend Analysis',
+                 column(6, selectInput('smooth_method', 'Smoothing Method',
+                                    choices = c('Linear' = 'lm', 
+                                                # 'Generalized Linear' = 'glm',
+                                                'General Additive' =  'gam', 
+                                                'Local Polynomial' = 'loess',
+                                                'Robust Linear' = 'rlm'),
+                                    selected = 'loess') ),
+                 column(6, selectInput('x_variable', 'Predictor (X Variable)', 
+                                    choices = names(data) )  ),
+                 column(6, uiOutput('loess_span')),
+                 column(6, uiOutput('gam_family')),
+                 column(12, plotOutput('manual_plot') ),
+                 column(12, uiOutput('plot_stats')),
+                 column(12, verbatimTextOutput('mannkendall')),
+                 column(12, DT::dataTableOutput('summary_variables')) ),
+       
+        # DISTRIBUTION FITTING
         tabPanel('Distribution Fitting', 
                  # fluidRow(
                    # column(6, 

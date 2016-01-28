@@ -42,13 +42,10 @@ shinyServer(function(input, output) {
     data = filter(data, data[,input$predictand] >= input$min_data & 
                     data[,input$predictand] <= input$max_data )
     
-    # Logarithm Transform Predictand
-#     data[,input$predictand] = ifelse(input$log_transform == T,
-#                                      log10(data[,input$predictand]),
-#                                      data[,input$predictand])
-#     
-    # Return Data in data.frame() format
-    data.frame(data)
+    # Return Data in data.frame() format with nice looking column names
+    data = data.frame(data)
+    colnames(data) = gsub('\\.',' ', colnames(data))
+    data
   })
   
   # Data Table
@@ -94,19 +91,57 @@ shinyServer(function(input, output) {
   output$rel_impo <- renderPrint({ 
     calc.relimp(model_output(),type=c("lmg","last","first","pratt"),rela=TRUE)   })
   
-  ########################
-  # Time Series Analysis #
-  ########################
+  ##################
+  # Trend Analysis #
+  ##################
   
-  output$time_plot <- renderPlot({
+  # Conditional Additional Model Controls
+  output$loess_span <- renderUI({ 
+    if(input$smooth_method == 'loess'){numericInput('loess_span', 'Span:', 0.75) } })
+  output$gam_family <- renderUI({ 
+    if(input$smooth_method == 'gam'){
+      selectInput('gam_family', 'Family:', 
+                  choices = c('Tweedie Distributed' = 'tw', 
+                              'Negative Binomial' = 'nb', 
+                              'Beta Regression' = 'betar', 
+                              'Scaled t' = 'scat', 
+                              'zero inflated Poisson' = 'ziP')) } })
+  
+  # The Plot
+  output$manual_plot <- renderPlot({
     LiveData() %>%
-      ggplot(aes(x = Year, y = get(input$predictand))) + 
+      ggplot(aes(x = get(input$x_variable), y = get(input$predictand))) + 
       geom_point() + 
-      labs(y = input$predictand) + 
+      labs(y = input$predictand, x = input$x_variable) + 
       theme_bw() + 
-      stat_smooth(method = input$smooth_method)
+      stat_smooth(method = input$smooth_method, span = input$loess_span)
     })
   
+  # Conditional Statistical Output
+  output$mannkendall <- renderPrint({ 
+    
+    if(input$x_variable == 'Year') {
+      return(MannKendall(LiveData()[,input$predictand]))                                }
+    if(input$smooth_method == 'lm') {
+      return(summary(lm(LiveData()[,input$predictand]~LiveData()[,input$x_variable])) ) }
+    if(input$smooth_method == 'loess'){
+      return(summary(loess(LiveData()[,input$predictand]~LiveData()[,input$x_variable], 
+                           span = input$loess_span)))                                   }
+    if(input$smooth_method == 'gam'){
+      Predictor = LiveData()[,input$x_variable]
+      return(summary(gam(LiveData()[,input$predictand]~Predictor, 
+                         family = input$gam_family)))                                   }                                 
+    if(input$smooth_method == 'rlm') {
+      return(summary(rlm(LiveData()[,input$predictand]~LiveData()[,input$x_variable] )) ) }
+    
+    })
+  
+  output$plot_stats <- renderUI({ 
+    if(input$x_variable == 'Year') {h4('Mann Kendall Test:')} 
+    else{ h4('Model Coefficients and Statistics:')}
+  })
+  
+  # Summary Table
   output$summary_variables <- DT::renderDataTable({
     x = LiveData()[,input$predictand]
     stats = paste0('<b>',c('Mean', 'St. Dev.','Mode','Skewness', 'Kurtosis' ),'</b>')
@@ -120,23 +155,19 @@ shinyServer(function(input, output) {
                   escape = FALSE)
   })
   
-  output$mannkendall <- renderPrint({ return(MannKendall(LiveData()[,input$predictand])) })
-  
   ########################
   # Distribution Fitting #
   ######################## 
   
   fitted_distribution <- reactive({
     fitdist( LiveData()[,input$predictand], input$distribution, 
-             method = input$fit_method)
-  })
+             method = input$fit_method)     })
   
   # Histogram
   output$histogram <- renderPlot({
     denscomp(fitted_distribution(), probability = F, 
              xlab = input$predictand, datacol = 'navy',
-             legendtext = input$distribution)
-  })
+             legendtext = input$distribution)   })
   
   # Summary Stats
   output$distribution_summary <- renderPrint({
