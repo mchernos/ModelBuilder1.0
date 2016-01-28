@@ -1,10 +1,10 @@
 # ModelBuilder User Interface
 
 shinyUI(fluidPage(
-  title = 'ALCES ModelBuilder 1.0',
+  titlePanel('ALCES ModelBuilder 1.0'),
   sidebarLayout(
     sidebarPanel(
-      helpText('Hello, World'),
+      # helpText('Hello, World'),
       selectInput('predictand', 'Predictand', colnames(data)[-1:-3]),
       
       # Specification of range within an interval
@@ -36,7 +36,7 @@ shinyUI(fluidPage(
       tabsetPanel(
         
         # RAW DATA TABLE
-        tabPanel('DataTable', DT::dataTableOutput('datatable') ),
+        tabPanel('Data Table', DT::dataTableOutput('datatable') ),
        
          # CORRELATION MATRIX
         tabPanel('Correlation Matrix', 
@@ -45,7 +45,7 @@ shinyUI(fluidPage(
                  uiOutput('correlation_table')),
        
         # MULTIPLE REGRESSION AUTOMATOR
-         tabPanel('Mutiple Regression Builder', 
+         tabPanel('Automated Mutiple Regression', 
                  plotOutput('regplot'),
                  plotOutput('full_regplot'),
                  h4('Model Output'),
@@ -58,10 +58,11 @@ shinyUI(fluidPage(
                  verbatimTextOutput('model_anova')),
        
        # TREND ANALYSIS
-         tabPanel('Trend Analysis',
+         tabPanel('Bivariate Analysis',
                  column(6, selectInput('smooth_method', 'Smoothing Method',
                                     choices = c('Linear' = 'lm', 
-                                                # 'Generalized Linear' = 'glm',
+                                                'Logarithmic (Base 10)' = 'log',
+                                                'Exponential' = 'exp',
                                                 'General Additive' =  'gam', 
                                                 'Local Polynomial' = 'loess',
                                                 'Robust Linear' = 'rlm'),

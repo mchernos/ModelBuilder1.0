@@ -114,26 +114,28 @@ shinyServer(function(input, output) {
       geom_point() + 
       labs(y = input$predictand, x = input$x_variable) + 
       theme_bw() + 
-      stat_smooth(method = input$smooth_method, span = input$loess_span)
+      stat_smooth(method = if(input$smooth_method == 'log' | input$smooth_method == 'exp'){
+        'lm'} else{input$smooth_method}, 
+                  span = input$loess_span,
+                  formula = if(input$smooth_method == 'log'){y~log10(x)}
+                  else if(input$smooth_method == 'exp'){y~exp(x)}
+                  else{y~x}, 
+        method.args = list(if(input$smooth_method == 'gam'){family=input$gam_family}else{NULL} )
+)
     })
   
   # Conditional Statistical Output
   output$mannkendall <- renderPrint({ 
+    y = LiveData()[,input$predictand]
+    x = LiveData()[,input$x_variable]
     
-    if(input$x_variable == 'Year') {
-      return(MannKendall(LiveData()[,input$predictand]))                                }
-    if(input$smooth_method == 'lm') {
-      return(summary(lm(LiveData()[,input$predictand]~LiveData()[,input$x_variable])) ) }
-    if(input$smooth_method == 'loess'){
-      return(summary(loess(LiveData()[,input$predictand]~LiveData()[,input$x_variable], 
-                           span = input$loess_span)))                                   }
-    if(input$smooth_method == 'gam'){
-      Predictor = LiveData()[,input$x_variable]
-      return(summary(gam(LiveData()[,input$predictand]~Predictor, 
-                         family = input$gam_family)))                                   }                                 
-    if(input$smooth_method == 'rlm') {
-      return(summary(rlm(LiveData()[,input$predictand]~LiveData()[,input$x_variable] )) ) }
-    
+    if(input$x_variable == 'Year') {return(MannKendall(y))          }
+    if(input$smooth_method == 'lm') {return(summary(lm(y~x)) )      }
+    if(input$smooth_method == 'log') {return(summary(lm(y~log10(x)) ) ) }
+    if(input$smooth_method == 'exp') {return(summary(lm(y~exp(x)  ) ) ) }
+    if(input$smooth_method == 'loess') {return(summary(loess(y~x, span = input$loess_span)))                                   }
+    if(input$smooth_method == 'gam') {return(summary(gam(y~x, family = input$gam_family)))                                   }                                 
+    if(input$smooth_method == 'rlm') {return(summary(rlm(y~x )) ) }
     })
   
   output$plot_stats <- renderUI({ 
