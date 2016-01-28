@@ -57,16 +57,20 @@ shinyServer(function(input, output) {
                    options = list(searching = F, 
                                   lengthMenu = c(10, 50,100)) ) })
   
-  # Correlation Matrix
-  output$corplot <- renderPlot({
-    
-    cor_matrix = cor(LiveData()[,!(colnames(LiveData()) %in% 
-                                     c('row', 'col', 'Year'))]) # get correlations
-    corrplot(cor_matrix, method = "ellipse", order = 'AOE') # plot matrix
-  })
+  ########################
+  #  Correlation Matrix  #
+  ########################
+  cor_matrix = reactive({ cor(LiveData()[,!(colnames(LiveData()) %in% c('row', 'col', 'Year'))]) })
   
+  # Output PLot and Table
+  output$corplot <- renderPlot({corrplot(cor_matrix(), method = "ellipse", order = 'AOE')  })
+  output$corr_table <- DT::renderDataTable({ 
+    DT::datatable(round(cor_matrix(),2), options = list(paging = FALSE, searching = FALSE)) })
+  output$correlation_table <- renderUI({ if(input$print_cor) DT::dataTableOutput('corr_table') })
   
-  # MULTIVARIATE REGRESSION
+  ###########################
+  # MULTIVARIATE REGRESSION #
+  ###########################
   model_output <- reactive({
     fit <- lm(LiveData()[,input$predictand]~. , 
               data=LiveData()[,!(colnames(LiveData()) %in% 
@@ -85,7 +89,10 @@ shinyServer(function(input, output) {
   
   # Model Output
   output$stat_summary <- renderPrint({ return(summary( model_output() ) )  })
-  output$model_anova <- renderPrint({  model_output()$anova })
+  output$model_deva <- renderPrint({  model_output()$anova })
+  output$model_anova <- renderPrint({  anova(model_output() ) })
+  output$rel_impo <- renderPrint({ 
+    calc.relimp(model_output(),type=c("lmg","last","first","pratt"),rela=TRUE)   })
   
   ########################
   # Time Series Analysis #
@@ -99,6 +106,19 @@ shinyServer(function(input, output) {
       theme_bw() + 
       stat_smooth(method = input$smooth_method)
     })
+  
+  output$summary_variables <- DT::renderDataTable({
+    x = LiveData()[,input$predictand]
+    stats = paste0('<b>',c('Mean', 'St. Dev.','Mode','Skewness', 'Kurtosis' ),'</b>')
+    stats2 = paste0('<b>',c( 'Min','25% Quartile','Median','75% Quartile','Max' ),'</b>')
+    results = c(mean(x,na.rm = T), sd(x,na.rm = T), Mode(x), skewness(x), kurtosis(x) )
+    results2 = c(quantile(x))
+    
+    DT::datatable(data.frame(stats, results, stats2, results2), 
+                  options = list(paging = FALSE, searching = FALSE),
+                                 colnames = rep('',4), rownames = FALSE,
+                  escape = FALSE)
+  })
   
   output$mannkendall <- renderPrint({ return(MannKendall(LiveData()[,input$predictand])) })
   
@@ -126,11 +146,7 @@ shinyServer(function(input, output) {
            shapiro.test(LiveData()[,input$predictand])
          }else {NA}
     ) })
-  
-  #   distrb = list('norm', 'gamma', 'lnorm', 'weibull', 'nbinom', 'pois')
-  #   x = distrb[[1]]
-  #   
-  
+
 })# END SERVER
 
 ###########################################

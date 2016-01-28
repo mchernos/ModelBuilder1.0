@@ -4,7 +4,8 @@ rm(list = ls())
 
 # Check for installed packages (install if need be)
 packages = c('shiny', 'dplyr', 'tidyr','corrplot', 'DT', 
-             'MASS', 'ggplot2', 'Kendall', 'fitdistrplus')
+             'MASS', 'ggplot2', 'Kendall', 'fitdistrplus', 
+             'e1071', 'relaimpo')
 x = lapply(packages, function(x){if (!require(x, character.only = T)) install.packages(x)})
 x = lapply(packages, require, character.only = T)
 rm(x, packages)
@@ -18,7 +19,7 @@ fit.plot = function(predictand, x){
        xlab = 'Observed', ylab = 'Predicted',
        col = rgb(0,0,0,0.6),
        main = '')
-  mtext('Predicted vs. Modelled', 3)
+  mtext('Predicted vs. Observed', 3)
   abline(0,1, col = 'red', lwd = 2)
   
   # Plot Residuals
@@ -26,8 +27,13 @@ fit.plot = function(predictand, x){
        col = rgb(0,0,0,0.6),
        main = '')
   mtext('Indexed Residuals', 3)
-  
   abline(h = 0, lwd = 2, lty = 2, col = 'red')
+}
+
+# Mode Function
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
 }
 
 ####################
@@ -36,6 +42,7 @@ fit.plot = function(predictand, x){
 
 filelist = list.files('Data', pattern = '*.csv')
 
+# Function to read in the Data
 read.data = function(filename){
   temp = read.csv(paste0('Data/',filename)) %>%
     gather(Year, Value, -row, -col)
@@ -45,13 +52,14 @@ read.data = function(filename){
 }
 
 # Read in and merge all datasets
-# data = lapply(filelist, function(x) read.data(x)) %>%
-#   Reduce(function(x,y) full_join(x,y, by = c('row', 'col', 'Year')), .)
+data = lapply(filelist, function(x) read.data(x)) %>%
+  Reduce(function(x,y) full_join(x,y, by = c('row', 'col', 'Year')), .) %>%
+  sample_n(1000)
 
 # data = data[sample(nrow(data), 1000), ]
 
 # TEMP DATA
-data = read.csv('Data/data2.csv')
+# data = read.csv('Data/data2.csv')
 
 # ggplot(aes(x = row, y = col, colour = fish_habitat), data = data) + geom_point()
 data$Year = as.numeric(data$Year)
