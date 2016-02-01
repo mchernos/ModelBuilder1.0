@@ -58,7 +58,7 @@ shinyServer(function(input, output) {
   #  Correlation Matrix  #
   ########################
   cor_matrix = reactive({ cor(LiveData()[,!(colnames(LiveData()) %in% c('row', 'col', 'Year'))]) })
-
+  
   # Output PLot and Table
   output$corplot <- renderPlot({corrplot(cor_matrix(), method = "ellipse", order = 'AOE')  })
   output$corr_table <- DT::renderDataTable({ 
@@ -119,13 +119,13 @@ shinyServer(function(input, output) {
       theme_bw() + 
       stat_smooth(method = if(input$smooth_method == 'log' | input$smooth_method == 'exp'){
         'lm'} else{input$smooth_method}, 
-                  span = input$loess_span,
-                  formula = if(input$smooth_method == 'log'){y~log10(x)}
-                  else if(input$smooth_method == 'exp'){y~exp(x)}
-                  else{y~x}, 
+        span = input$loess_span,
+        formula = if(input$smooth_method == 'log'){y~log10(x)}
+        else if(input$smooth_method == 'exp'){y~exp(x)}
+        else{y~x}, 
         method.args = list(if(input$smooth_method == 'gam'){family=input$gam_family}else{NULL} )
-)
-    })
+      )
+  })
   
   # Conditional Statistical Output
   output$mannkendall <- renderPrint({ 
@@ -139,7 +139,7 @@ shinyServer(function(input, output) {
     if(input$smooth_method == 'loess') {return(summary(loess(y~x, span = input$loess_span)))                                   }
     if(input$smooth_method == 'gam') {return(summary(gam(y~x, family = input$gam_family)))                                   }                                 
     if(input$smooth_method == 'rlm') {return(summary(rlm(y~x )) ) }
-    })
+  })
   
   output$plot_stats <- renderUI({ 
     if(input$x_variable == 'Year') {h4('Mann Kendall Test:')} 
@@ -156,7 +156,7 @@ shinyServer(function(input, output) {
     
     DT::datatable(data.frame(stats, results, stats2, results2), 
                   options = list(paging = FALSE, searching = FALSE),
-                                 colnames = rep('',4), rownames = FALSE,
+                  colnames = rep('',4), rownames = FALSE,
                   escape = FALSE)
   })
   
@@ -168,13 +168,20 @@ shinyServer(function(input, output) {
     fitdist( LiveData()[,input$predictand], input$distribution, 
              method = input$fit_method)     })
   
-  # Histogram
+  # Histogram/Density Line
   output$histogram <- renderPlot({
-    denscomp(fitted_distribution(), 
-             # breaks = input$n_breaks,
-             probability = F, 
-             xlab = input$predictand, datacol = 'navy',
-             legendtext = input$distribution)   })
+    if(input$automatic_breaks){
+      denscomp(fitted_distribution(), 
+               probability = F, 
+               xlab = input$predictand, datacol = 'navy',
+               legendtext = input$distribution)
+    }else{
+      denscomp1(fitted_distribution(), 
+                breaks = input$n_breaks,
+                probability = F, 
+                xlab = input$predictand, datacol = 'navy',
+                legendtext = input$distribution) }
+  })
   
   # Summary Stats
   output$distribution_summary <- renderPrint({
@@ -184,5 +191,26 @@ shinyServer(function(input, output) {
            shapiro.test(LiveData()[,input$predictand])
          }else {NA}
     ) })
+  
+  # N Breaks?  
+  output$n_breaks <- renderUI({ 
+    if(input$automatic_breaks == F)  
+      column(6,numericInput('n_breaks', 'Approximate Breaks:', round(dim(data)[1]/100), min = 1) ) })
 
+  
+  
+  ################################
+  # Principal Component Analysis #
+  ################################
+  
+  pca <- reactive({
+    prcomp(LiveData()[,!(colnames(LiveData()) %in% c('row', 'col', 'Year'))] ) 
+  })
+  
+  output$pca_plot <- renderPlot({
+    plot( pca(), type = 'l', pch = 19, 
+          main = 'Principal Component Analysis' )})
+  
+  output$pca_summary <- renderPrint({  list(summary(pca()), pca() )})
+  
 })# END SERVER

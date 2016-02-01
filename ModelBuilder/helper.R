@@ -9,7 +9,7 @@ packages = c('shiny', 'dplyr', 'tidyr','corrplot', 'DT',
 x = lapply(packages, function(x){if (!require(x, character.only = T)) install.packages(x)})
 x = lapply(packages, require, character.only = T)
 rm(x, packages)
-
+source('ModelBuilder/denscomp1.R')
 
 # Fit Plot Function
 fit.plot = function(predictand, x){

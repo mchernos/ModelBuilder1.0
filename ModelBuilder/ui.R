@@ -14,8 +14,8 @@ shinyUI(fluidPage(
                   # value = c(min(data$Year), max(data$Year)),
                   sep=""),
       fluidRow(h5('Filter Based on Predictand Threshold:', align ='center'),
-        column(6, numericInput("min_data", "Minimum:",0) ),
-        column(6, numericInput("max_data", "Minimum:", max(data) ) ) ),
+               column(6, numericInput("min_data", "Minimum:",0) ),
+               column(6, numericInput("max_data", "Minimum:", max(data) ) ) ),
       
       # Specify Aggregation Method (if any)
       selectInput('Aggregate',  label = 'Aggregate Data:', 
@@ -27,25 +27,25 @@ shinyUI(fluidPage(
       # checkboxInput('Aggregate', label = 'Aggregate Data by Annual Mean?'),
       # checkboxInput('Sum', label = 'Aggregate Data by Annual Sum?')
       # selectInput('x', 'Build a regression model of mpg against:',
-                  # choices = names(mtcars)[-1]),
+      # choices = names(mtcars)[-1]),
       # radioButtons('format', 'Document format', c('PDF', 'HTML', 'Word'),
-                   # inline = TRUE),
-#       downloadButton('downloadReport')
+      # inline = TRUE),
+      #       downloadButton('downloadReport')
     ),
     mainPanel(
       tabsetPanel(
         
         # RAW DATA TABLE
         tabPanel('Data Table', DT::dataTableOutput('datatable') ),
-       
-         # CORRELATION MATRIX
+        
+        # CORRELATION MATRIX
         tabPanel('Correlation Matrix', 
                  plotOutput('corplot'),
                  checkboxInput('print_cor', 'Display Correlation Matrix?'),
                  uiOutput('correlation_table')),
-       
+        
         # MULTIPLE REGRESSION AUTOMATOR
-         tabPanel('Automated Mutiple Regression', 
+        tabPanel('Automated Mutiple Regression', 
                  plotOutput('regplot'),
                  plotOutput('full_regplot'),
                  h4('Model Output'),
@@ -56,56 +56,60 @@ shinyUI(fluidPage(
                  verbatimTextOutput('model_deva'),
                  h4('Model Anova'),
                  verbatimTextOutput('model_anova')),
-       
-       # TREND ANALYSIS
-         tabPanel('Bivariate Analysis',
+        
+        # TREND ANALYSIS
+        tabPanel('Bivariate Analysis',
                  column(6, selectInput('smooth_method', 'Smoothing Method',
-                                    choices = c('Linear' = 'lm', 
-                                                'Logarithmic (Base 10)' = 'log',
-                                                'Exponential' = 'exp',
-                                                'General Additive' =  'gam', 
-                                                'Local Polynomial' = 'loess',
-                                                'Robust Linear' = 'rlm'),
-                                    selected = 'loess') ),
+                                       choices = c('Linear' = 'lm', 
+                                                   'Logarithmic (Base 10)' = 'log',
+                                                   'Exponential' = 'exp',
+                                                   'General Additive' =  'gam', 
+                                                   'Local Polynomial' = 'loess',
+                                                   'Robust Linear' = 'rlm'),
+                                       selected = 'loess') ),
                  column(6, selectInput('x_variable', 'Predictor (X Variable)', 
-                                    choices = names(data) )  ),
+                                       choices = names(data) )  ),
                  column(6, uiOutput('loess_span')),
                  column(6, uiOutput('gam_family')),
                  column(12, plotOutput('manual_plot') ),
                  column(12, uiOutput('plot_stats')),
                  column(12, verbatimTextOutput('mannkendall')),
                  column(12, DT::dataTableOutput('summary_variables')) ),
-       
+        
         # DISTRIBUTION FITTING
         tabPanel('Distribution Fitting', 
                  fluidRow(
-                   column(6, 
-                          selectInput('distribution', 'Fit Distribution:',
-                                      choices = c('Normal' = 'norm', 
-                                                  'Gamma' = 'gamma', 
-                                                  'Log-Normal' = 'lnorm', 
-                                                  'Weibull' = 'weibull', 
-                                                  'Binomial' = 'nbinom', 
-                                                  'Poission' = 'pois'),
-                                      selected = 'norm', multiple = F) ),
-                   column(6,
-                          selectInput('fit_method', 'Optimization Method',
-                                      choices = c('Maximum Likelihood' = "mle", 
-                                                  'Method of Moments' = "mme", 
-                                                  # 'Quantile Matching' = "qme", 
-                                                  'Maximum Goodness-of-Fit' = "mge"))
-                          ), 
-                          # ),
-                   # column(6,numericInput('n_breaks', 'Breaks:', round(dim(data)[1]/100), min = 1))
-                 # ),
-                 column(12, plotOutput('histogram')),
-                 column(12, h4('Optomized Distribution Parameters')),
-                 column(12, verbatimTextOutput('distribution_summary')))
-                 # h4('Mann Kendall Test:'),
-                 # verbatimTextOutput('mannkendall'))
+                   column(6, selectInput('distribution', 'Fit Distribution:',
+                                         choices = c('Normal' = 'norm', 
+                                                     'Gamma' = 'gamma', 
+                                                     'Log-Normal' = 'lnorm', 
+                                                     'Weibull' = 'weibull', 
+                                                     'Binomial' = 'nbinom', 
+                                                     'Poission' = 'pois'),
+                                         selected = 'norm', multiple = F)  ),
+                   column(6, checkboxInput('automatic_breaks', 'Automatic Breaks? (Recommended)', 
+                                           value = T) ) ),
+                 fluidRow(
+                   column(6, selectInput('fit_method', 'Optimization Method',
+                                        choices = c('Maximum Likelihood' = "mle", 
+                                                    'Method of Moments' = "mme", 
+                                                    # 'Quantile Matching' = "qme", 
+                                                    'Maximum Goodness-of-Fit' = "mge")) ), 
+                   # column(6,
+                   uiOutput('n_breaks') ),
+                   column(12, plotOutput('histogram')),
+                   column(12, h4('Optomized Distribution Parameters')),
+                   column(12, verbatimTextOutput('distribution_summary'))
+                 ),
+        
+        # PRINCIPAL COMPONENT ANALYSIS
+        tabPanel('Principal Component Analysis',
+                 plotOutput('pca_plot'),
+                 h4('Output:'),
+                 verbatimTextOutput('pca_summary') 
         )
       )
     )
   )
-
+  
 )) # Closes UI
