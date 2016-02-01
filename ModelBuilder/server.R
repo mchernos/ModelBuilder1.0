@@ -58,11 +58,14 @@ shinyServer(function(input, output) {
   #  Correlation Matrix  #
   ########################
   cor_matrix = reactive({ cor(LiveData()[,!(colnames(LiveData()) %in% c('row', 'col', 'Year'))]) })
-  
+
   # Output PLot and Table
   output$corplot <- renderPlot({corrplot(cor_matrix(), method = "ellipse", order = 'AOE')  })
   output$corr_table <- DT::renderDataTable({ 
-    DT::datatable(round(cor_matrix(),2), options = list(paging = FALSE, searching = FALSE)) })
+    DT::datatable(round(cor_matrix(),2), 
+                  rownames = paste0('<b>', rownames(cor_matrix()), '</b>'),
+                  options = list(paging = FALSE, searching = FALSE),
+                  escape = F) })
   output$correlation_table <- renderUI({ if(input$print_cor) DT::dataTableOutput('corr_table') })
   
   ###########################
@@ -97,7 +100,7 @@ shinyServer(function(input, output) {
   
   # Conditional Additional Model Controls
   output$loess_span <- renderUI({ 
-    if(input$smooth_method == 'loess'){numericInput('loess_span', 'Span:', 0.75) } })
+    if(input$smooth_method == 'loess'){numericInput('loess_span', 'Span:', 0.75, step = 0.1) } })
   output$gam_family <- renderUI({ 
     if(input$smooth_method == 'gam'){
       selectInput('gam_family', 'Family:', 
@@ -167,7 +170,9 @@ shinyServer(function(input, output) {
   
   # Histogram
   output$histogram <- renderPlot({
-    denscomp(fitted_distribution(), probability = F, 
+    denscomp(fitted_distribution(), 
+             # breaks = input$n_breaks,
+             probability = F, 
              xlab = input$predictand, datacol = 'navy',
              legendtext = input$distribution)   })
   
@@ -181,33 +186,3 @@ shinyServer(function(input, output) {
     ) })
 
 })# END SERVER
-
-###########################################
-# # Find Best Predictors of Riparian Health #
-# ###########################################
-
-# 
-# data = data[,rev(colnames(data))]
-# 
-
-# mtext('Best Model Predictors: Elevation and Slope', adj = 1.5, font = 2)
-# 
-# # Test Model formula
-# xx = step$fitted.values
-# step_fits = coefficients(step)[1] + 
-#   coefficients(step)[2]*data$Elevation + 
-#   coefficients(step)[3]*data$Slope
-# 
-# 
-# # Relative Importance
-# library('relaimpo')
-# calc.relimp(step,type=c("lmg","last","first","pratt"),rela=TRUE)
-# 
-# 
-# # Test fit (Lesser models)
-# fit1 = lm(`Riparian Health`~Crops + Slope + `Beaver Dams`,data=data)
-# fit2 = lm(`Riparian Health`~Crops + Slope + `Beaver Dams` + Elevation,data=data)
-# fit3 = lm(`Riparian Health`~Crops + Slope + Elevation,data=data) 
-# fit4 = lm(`Riparian Health`~Slope + Crops, data=data)
-# 
-# calc.relimp(fit2,type=c("lmg","last","first","pratt"),rela=TRUE)

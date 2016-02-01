@@ -78,8 +78,8 @@ shinyUI(fluidPage(
        
         # DISTRIBUTION FITTING
         tabPanel('Distribution Fitting', 
-                 # fluidRow(
-                   # column(6, 
+                 fluidRow(
+                   column(6, 
                           selectInput('distribution', 'Fit Distribution:',
                                       choices = c('Normal' = 'norm', 
                                                   'Gamma' = 'gamma', 
@@ -87,20 +87,23 @@ shinyUI(fluidPage(
                                                   'Weibull' = 'weibull', 
                                                   'Binomial' = 'nbinom', 
                                                   'Poission' = 'pois'),
-                                      selected = 'norm', multiple = F),
+                                      selected = 'norm', multiple = F) ),
+                   column(6,
                           selectInput('fit_method', 'Optimization Method',
                                       choices = c('Maximum Likelihood' = "mle", 
                                                   'Method of Moments' = "mme", 
                                                   # 'Quantile Matching' = "qme", 
-                                                  'Maximum Goodness-of-Fit' = "mge")), 
+                                                  'Maximum Goodness-of-Fit' = "mge"))
+                          ), 
                           # ),
                    # column(6,numericInput('n_breaks', 'Breaks:', round(dim(data)[1]/100), min = 1))
                  # ),
-                 plotOutput('histogram'),
-                 h4('Optomized Distribution Parameters'),
-                 verbatimTextOutput('distribution_summary'))
+                 column(12, plotOutput('histogram')),
+                 column(12, h4('Optomized Distribution Parameters')),
+                 column(12, verbatimTextOutput('distribution_summary')))
                  # h4('Mann Kendall Test:'),
                  # verbatimTextOutput('mannkendall'))
+        )
       )
     )
   )
