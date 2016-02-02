@@ -10,6 +10,7 @@ shinyUI(fluidPage(
       # Specification of range within an interval
       sliderInput("year_range", "Year Range:", step = 10,
                   1900,2060, c(1900,2060),
+                  animate = TRUE,
                   # min = min(data$Year), max = max(data$Year), 
                   # value = c(min(data$Year), max(data$Year)),
                   sep=""),
@@ -22,7 +23,8 @@ shinyUI(fluidPage(
                   choices = c('None','Mean', 'Median', 'Sum'), 
                   selected = 'None', multiple = F),
       checkboxInput('code_zero', 'Code predictand 0s as "NA" '),
-      checkboxInput('code_one', 'Code predictand 1s as "NA" ')#,
+      checkboxInput('code_one', 'Code predictand 1s as "NA" '),
+      downloadButton('downloadLiveData', 'Download Subset Data')
       # checkboxInput('log_transform', 'Log-Transform Predictand (Base 10)')
       # checkboxInput('Aggregate', label = 'Aggregate Data by Annual Mean?'),
       # checkboxInput('Sum', label = 'Aggregate Data by Annual Sum?')

@@ -39,8 +39,9 @@ shinyServer(function(input, output) {
     data = data %>% filter(Year %in% input$year_range[1]:input$year_range[2])
     
     # Filter by predictand range
-    data = filter(data, data[,input$predictand] >= input$min_data & 
-                    data[,input$predictand] <= input$max_data )
+    data = data %>% 
+      filter(data[,input$predictand] >= input$min_data & 
+               data[,input$predictand] <= input$max_data )
     
     # Return Data in data.frame() format with nice looking column names
     data = data.frame(data)
@@ -54,13 +55,22 @@ shinyServer(function(input, output) {
                    options = list(searching = F, 
                                   lengthMenu = c(10, 50,100)) ) })
   
+  # Download LiveData()
+  output$downloadLiveData <- downloadHandler(
+    filename = function() { paste('ALCESModelBuilderData', Sys.Date(), '.csv', sep='') },
+    content = function(file) {
+      write.csv(LiveData(), file, row.names = F)
+    }
+  )
+  
+  
   ########################
   #  Correlation Matrix  #
   ########################
   cor_matrix = reactive({ cor(LiveData()[,!(colnames(LiveData()) %in% c('row', 'col', 'Year'))]) })
   
   # Output Plot and Table
-  CorPlot <- function()({corrplot(cor_matrix(), method = "ellipse", order = 'AOE')})
+  CorPlot <- function()({corrplot(cor_matrix(), method = "ellipse")})
   output$corplot <- renderPlot({  CorPlot() })
   
   output$corr_table <- DT::renderDataTable({ 
