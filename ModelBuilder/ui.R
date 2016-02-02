@@ -1,7 +1,7 @@
 # ModelBuilder User Interface
 
 shinyUI(fluidPage(
-  titlePanel('ALCES ModelBuilder 1.0'),
+  titlePanel('ALCES ModelBuilder 1.0 (BETA)'),
   sidebarLayout(
     sidebarPanel(
       # helpText('Hello, World'),
@@ -41,14 +41,19 @@ shinyUI(fluidPage(
         # CORRELATION MATRIX
         tabPanel('Correlation Matrix', 
                  plotOutput('corplot'),
-                 checkboxInput('print_cor', 'Display Correlation Matrix?'),
+                 column(4,checkboxInput('print_cor', 'Display Correlation Matrix?')),
+                 column(2, downloadButton('downloadCorPlot')),
+                 column(2, numericInput('CorPlot_width', 'Plot Width:', value = 5, min = 1)),
+                 column(2, numericInput('CorPlot_height', 'Plot Height:', value = 5, min = 1)),
                  uiOutput('correlation_table')),
         
         # MULTIPLE REGRESSION AUTOMATOR
         tabPanel('Automated Mutiple Regression', 
                  plotOutput('regplot'),
+                 column(2, downloadButton('downloadRegPlot')),
                  plotOutput('full_regplot'),
-                 h4('Model Output'),
+                 column(2, downloadButton('downloadRegPlot2')),
+                 column(12,h4('Model Output')),
                  verbatimTextOutput('stat_summary'),
                  h4('Parameter Relative Importance'),
                  verbatimTextOutput('rel_impo'),
@@ -72,6 +77,9 @@ shinyUI(fluidPage(
                  column(6, uiOutput('loess_span')),
                  column(6, uiOutput('gam_family')),
                  column(12, plotOutput('manual_plot') ),
+                 column(2, downloadButton('downloadTrendPlot')),
+                 column(2, numericInput('TrendPlot_width', 'Plot Width:', value = 7, min = 1)),
+                 column(2, numericInput('TrendPlot_height', 'Plot Height:', value = 5, min = 1)),
                  column(12, uiOutput('plot_stats')),
                  column(12, verbatimTextOutput('mannkendall')),
                  column(12, DT::dataTableOutput('summary_variables')) ),
@@ -91,16 +99,22 @@ shinyUI(fluidPage(
                                            value = T) ) ),
                  fluidRow(
                    column(6, selectInput('fit_method', 'Optimization Method',
-                                        choices = c('Maximum Likelihood' = "mle", 
-                                                    'Method of Moments' = "mme", 
-                                                    # 'Quantile Matching' = "qme", 
-                                                    'Maximum Goodness-of-Fit' = "mge")) ), 
+                                         choices = c('Maximum Likelihood' = "mle", 
+                                                     'Method of Moments' = "mme", 
+                                                     # 'Quantile Matching' = "qme", 
+                                                     'Maximum Goodness-of-Fit' = "mge")) ), 
                    # column(6,
                    uiOutput('n_breaks') ),
-                   column(12, plotOutput('histogram')),
-                   column(12, h4('Optomized Distribution Parameters')),
-                   column(12, verbatimTextOutput('distribution_summary'))
-                 ),
+                 column(12, plotOutput('histogram')),
+                 column(2, downloadButton('downloadHistPlot')),
+                 column(2, numericInput('HistPlot_width', 'Plot Width:', value = 6, min = 1)),
+                 column(2, numericInput('HistPlot_height', 'Plot Height:', value = 5, min = 1)),
+                 column(6, selectInput('legend_pos', 'Legend Position',
+                                       choices = c('top', 'topright', 'topleft', 
+                                                   'bottom', 'bottomleft', 'bottomright'))),
+                 column(12, h4('Optomized Distribution Parameters')),
+                 column(12, verbatimTextOutput('distribution_summary'))
+        ),
         
         # PRINCIPAL COMPONENT ANALYSIS
         tabPanel('Principal Component Analysis',

@@ -59,14 +59,25 @@ shinyServer(function(input, output) {
   ########################
   cor_matrix = reactive({ cor(LiveData()[,!(colnames(LiveData()) %in% c('row', 'col', 'Year'))]) })
   
-  # Output PLot and Table
-  output$corplot <- renderPlot({corrplot(cor_matrix(), method = "ellipse", order = 'AOE')  })
+  # Output Plot and Table
+  CorPlot <- function()({corrplot(cor_matrix(), method = "ellipse", order = 'AOE')})
+  output$corplot <- renderPlot({  CorPlot() })
+  
   output$corr_table <- DT::renderDataTable({ 
     DT::datatable(round(cor_matrix(),2), 
                   rownames = paste0('<b>', rownames(cor_matrix()), '</b>'),
                   options = list(paging = FALSE, searching = FALSE),
                   escape = F) })
   output$correlation_table <- renderUI({ if(input$print_cor) DT::dataTableOutput('corr_table') })
+  
+  # Save CorPlot
+  output$downloadCorPlot <- downloadHandler(
+    filename = paste('Correlation_Plot', Sys.Date(), '.pdf', sep=''),
+    content = function(file) {
+      pdf(file, width=input$CorPlot_width, height=input$CorPlot_height)
+      CorPlot()
+      dev.off()     }
+    )
   
   ###########################
   # MULTIVARIATE REGRESSION #
@@ -80,12 +91,33 @@ shinyServer(function(input, output) {
     return(step)
   })
   
-  # Regression Plot
-  output$regplot <- renderPlot({ 
+  # Regression Plots
+  RegPlot <- function()({
     par(mfrow = c(1,2))
-    fit.plot(LiveData()[,input$predictand], model_output() )  })
+    fit.plot(LiveData()[,input$predictand], model_output() )
+    # plot(model_output())
+    })
+  RegPlot2 <- function()({ par(mfrow = c(2,2)); plot(model_output()) })
   
-  output$full_regplot <- renderPlot({ par(mfrow = c(2,2)); plot(model_output()) })
+  # Render
+  output$regplot <- renderPlot({RegPlot() })
+  output$full_regplot <- renderPlot({ RegPlot2() })
+  
+  # Save RegPlot
+  output$downloadRegPlot <- downloadHandler(
+    filename = paste(input$predictand, 'model', '.pdf', sep=''),
+    content = function(file) {
+      pdf(file, width=10, height=5)
+      RegPlot()
+      dev.off()     }
+  )
+  output$downloadRegPlot2 <- downloadHandler(
+    filename = paste(input$predictand, 'model2', '.pdf', sep=''),
+    content = function(file) {
+      pdf(file, width=10, height=10)
+      RegPlot2()
+      dev.off()     }
+  )
   
   # Model Output
   output$stat_summary <- renderPrint({ return(summary( model_output() ) )  })
@@ -111,7 +143,8 @@ shinyServer(function(input, output) {
                               'zero inflated Poisson' = 'ziP')) } })
   
   # The Plot
-  output$manual_plot <- renderPlot({
+  output$manual_plot <- renderPlot({ TrendPlot() })
+  TrendPlot <- reactive({
     LiveData() %>%
       ggplot(aes(x = get(input$x_variable), y = get(input$predictand))) + 
       geom_point() + 
@@ -126,6 +159,16 @@ shinyServer(function(input, output) {
         method.args = list(if(input$smooth_method == 'gam'){family=input$gam_family}else{NULL} )
       )
   })
+  
+  # Download Graphic
+  output$downloadTrendPlot <- downloadHandler(
+    filename = function() { paste(input$predictand,'_',input$x_variable, '.pdf', sep='') },
+    content = function(file) {
+      ggsave(file, plot = TrendPlot(), device = "pdf", 
+             width = input$TrendPlot_width, height = input$TrendPlot_height)
+    }
+  )
+  
   
   # Conditional Statistical Output
   output$mannkendall <- renderPrint({ 
@@ -169,19 +212,31 @@ shinyServer(function(input, output) {
              method = input$fit_method)     })
   
   # Histogram/Density Line
-  output$histogram <- renderPlot({
+  HistPlot <- function()({
     if(input$automatic_breaks){
       denscomp(fitted_distribution(), 
                probability = F, 
                xlab = input$predictand, datacol = 'navy',
-               legendtext = input$distribution)
+               legendtext = input$distribution,
+               xlegend = input$legend_pos)
     }else{
       denscomp1(fitted_distribution(), 
                 breaks = input$n_breaks,
                 probability = F, 
                 xlab = input$predictand, datacol = 'navy',
-                legendtext = input$distribution) }
+                legendtext = input$distribution,
+                xlegend = input$legend_pos) }
   })
+  output$histogram <- renderPlot({ HistPlot() })
+
+  # Save HistPlot
+  output$downloadHistPlot <- downloadHandler(
+    filename = paste(input$predictand, input$distribution, '.pdf', sep=''),
+    content = function(file) {
+      pdf(file, width=input$HistPlot_width, height=input$HistPlot_height)
+      HistPlot()
+      dev.off()     }
+  )
   
   # Summary Stats
   output$distribution_summary <- renderPrint({
@@ -196,8 +251,6 @@ shinyServer(function(input, output) {
   output$n_breaks <- renderUI({ 
     if(input$automatic_breaks == F)  
       column(6,numericInput('n_breaks', 'Approximate Breaks:', round(dim(data)[1]/100), min = 1) ) })
-
-  
   
   ################################
   # Principal Component Analysis #
