@@ -56,10 +56,8 @@ data = lapply(filelist, function(x) read.data(x)) %>%
   Reduce(function(x,y) full_join(x,y, by = c('row', 'col', 'Year')), .) %>%
   sample_n(2500)
 
-# data = data[sample(nrow(data), 1000), ]
 
 # TEMP DATA
 # data = read.csv('Data/data2.csv')
 
-# ggplot(aes(x = row, y = col, colour = fish_habitat), data = data) + geom_point()
 data$Year = as.numeric(data$Year)
