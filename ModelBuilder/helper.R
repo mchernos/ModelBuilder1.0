@@ -40,11 +40,11 @@ Mode <- function(x) {
 # Read in the Data #
 ####################
 
-filelist = list.files('Data', pattern = '*.csv')
+filelist = list.files('ModelBuilder/Data', pattern = '*.csv')
 
 # Function to read in the Data
 read.data = function(filename){
-  temp = read.csv(paste0('Data/',filename)) %>%
+  temp = read.csv(paste0('ModelBuilder/Data/',filename)) %>%
     gather(Year, Value, -row, -col)
   temp$Year = gsub('X','',temp$Year)
   colnames(temp)[4] = gsub('.csv', '',filename)
@@ -56,8 +56,8 @@ data = lapply(filelist, function(x) read.data(x)) %>%
   Reduce(function(x,y) full_join(x,y, by = c('row', 'col', 'Year')), .) %>%
   sample_n(2500)
 
+data$Year = as.numeric(data$Year)
 
 # TEMP DATA
 # data = read.csv('Data/data2.csv')
 
-data$Year = as.numeric(data$Year)
