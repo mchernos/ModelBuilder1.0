@@ -1,5 +1,5 @@
 shinyServer(function(input, output) {
-
+  
   # Regional Subset?
   output$region_subset <- renderUI({
     if(regionalized){
@@ -57,17 +57,17 @@ shinyServer(function(input, output) {
     data = data %>% 
       filter(data[,input$predictand] >= input$min_data & 
                data[,input$predictand] <= input$max_data )
-
+    
     # Select only certain regions
     if(regionalized & !('All' %in% input$regions)){
       data = data %>% filter(name %in% input$regions)
-      }
+    }
     
     # Return Data in data.frame() format with nice looking column names
     data = data.frame(data)
     colnames(data) = gsub('\\.',' ', colnames(data))
     data
-    })
+  })
   
   # Data Table
   output$datatable <- DT::renderDataTable({ 
@@ -107,7 +107,7 @@ shinyServer(function(input, output) {
       pdf(file, width=input$CorPlot_width, height=input$CorPlot_height)
       CorPlot()
       dev.off()     }
-    )
+  )
   
   ###########################
   # MULTIVARIATE REGRESSION #
@@ -126,7 +126,7 @@ shinyServer(function(input, output) {
     par(mfrow = c(1,2))
     fit.plot(LiveData()[,input$predictand], model_output() )
     # plot(model_output())
-    })
+  })
   RegPlot2 <- function()({ par(mfrow = c(2,2)); plot(model_output()) })
   
   # Render
@@ -175,9 +175,7 @@ shinyServer(function(input, output) {
   # The Plot
   output$manual_plot <- renderPlot({ TrendPlot() })
   TrendPlot <- reactive({
-    LiveData() %>%
-      ggplot(aes(x = get(input$x_variable), y = get(input$predictand))) + 
-      geom_point() + 
+    p = ggplot( LiveData(), aes(x = get(input$x_variable), y = get(input$predictand))) + 
       labs(y = input$predictand, x = input$x_variable) + 
       theme_bw() + 
       stat_smooth(method = if(input$smooth_method == 'log' | input$smooth_method == 'exp'){
@@ -188,6 +186,11 @@ shinyServer(function(input, output) {
         else{y~x}, 
         method.args = list(if(input$smooth_method == 'gam'){family=input$gam_family}else{NULL} )
       )
+
+    # Add Boxplot if x variables are names
+    if(input$x_variable == 'name' ){
+      p + geom_boxplot(fill = 'grey60') }else{ 
+        p + geom_point() } 
   })
   
   # Download Graphic
@@ -205,6 +208,10 @@ shinyServer(function(input, output) {
     y = LiveData()[,input$predictand]
     x = LiveData()[,input$x_variable]
     
+    if(input$x_variable == 'name'){
+      fit = aov(y ~ x, data=LiveData() )
+      return(list(summary(fit), TukeyHSD(fit)) )
+    }
     if(input$x_variable == 'Year') {return(MannKendall(y))          }
     if(input$smooth_method == 'lm') {return(summary(lm(y~x)) )      }
     if(input$smooth_method == 'log') {return(summary(lm(y~log10(x)) ) ) }
@@ -258,7 +265,7 @@ shinyServer(function(input, output) {
                 xlegend = input$legend_pos) }
   })
   output$histogram <- renderPlot({ HistPlot() })
-
+  
   # Save HistPlot
   output$downloadHistPlot <- downloadHandler(
     filename = paste(input$predictand, input$distribution, '.pdf', sep=''),
