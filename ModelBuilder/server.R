@@ -1,4 +1,13 @@
 shinyServer(function(input, output) {
+
+  # Regional Subset?
+  output$region_subset <- renderUI({
+    if(regionalized){
+      selectizeInput('regions', 'Regions', 
+                     choices = c('All', as.character(unique(data$name))),
+                     selected = 'All',
+                     multiple = T ) }
+  })
   
   ##################
   # Aggregate Data #
@@ -15,24 +24,30 @@ shinyServer(function(input, output) {
     
     # Conditional Aggregation Methods 
     if (input$Aggregate != 'None'){ 
-      data = data %>%
-        gather(Stat, Value,  -row, -col, -Year) %>%
-        group_by(Year, Stat)
+      if(regionalized){
+        data = data %>%
+          gather(Stat, Value, -name, -Year) %>%
+          group_by(Year, Stat)
+      }else {
+        data = data %>%
+          gather(Stat, Value,  -row, -col, -Year) %>%
+          group_by(Year, Stat)
+      }
       
       if(input$Aggregate == 'Mean')   {
         data = data %>% 
           summarise(Value = mean(Value, na.rm = T)) %>% 
-          spread(key = Stat, value =Value) }
+          spread(key = Stat, value = Value) }
       
       if(input$Aggregate == 'Median')  {
         data = data %>% 
           summarise(Value = median(Value, na.rm = T)) %>% 
-          spread(key = Stat, value =Value) }
+          spread(key = Stat, value = Value) }
       
       if(input$Aggregate == 'Sum')     {
         data = data %>% 
           summarise(Value = sum(Value, na.rm = T)) %>% 
-          spread(key = Stat, value =Value) }
+          spread(key = Stat, value = Value) }
     }
     
     # Filter by Year
@@ -42,12 +57,17 @@ shinyServer(function(input, output) {
     data = data %>% 
       filter(data[,input$predictand] >= input$min_data & 
                data[,input$predictand] <= input$max_data )
+
+    # Select only certain regions
+    if(regionalized & !('All' %in% input$regions)){
+      data = data %>% filter(name %in% input$regions)
+      }
     
     # Return Data in data.frame() format with nice looking column names
     data = data.frame(data)
     colnames(data) = gsub('\\.',' ', colnames(data))
     data
-  })
+    })
   
   # Data Table
   output$datatable <- DT::renderDataTable({ 
@@ -67,7 +87,7 @@ shinyServer(function(input, output) {
   ########################
   #  Correlation Matrix  #
   ########################
-  cor_matrix = reactive({ cor(LiveData()[,!(colnames(LiveData()) %in% c('row', 'col', 'Year'))]) })
+  cor_matrix = reactive({ cor(LiveData()[,!(colnames(LiveData()) %in% non_data_cols )]) })
   
   # Output Plot and Table
   CorPlot <- function()({corrplot(cor_matrix(), method = "ellipse")})
@@ -95,7 +115,7 @@ shinyServer(function(input, output) {
   model_output <- reactive({
     fit <- lm(LiveData()[,input$predictand]~. , 
               data=LiveData()[,!(colnames(LiveData()) %in% 
-                                   c('row', 'col', 'Year', input$predictand) ) ]   )
+                                   c(non_data_cols, input$predictand) ) ]   )
     step = stepAIC(fit, scope = list(upper = fit, lower = ~1), 
                    direction="both", steps = 1000, trace = F)
     return(step)
@@ -260,14 +280,15 @@ shinyServer(function(input, output) {
   # N Breaks?  
   output$n_breaks <- renderUI({ 
     if(input$automatic_breaks == F)  
-      column(6,numericInput('n_breaks', 'Approximate Breaks:', round(dim(data)[1]/100), min = 1) ) })
+      column(6,numericInput('n_breaks', 'Approximate Breaks:', 
+                            round(dim(data)[1]/100), min = 1) ) })
   
   ################################
   # Principal Component Analysis #
   ################################
   
   pca <- reactive({
-    prcomp(LiveData()[,!(colnames(LiveData()) %in% c('row', 'col', 'Year'))] ) 
+    prcomp(LiveData()[,!(colnames(LiveData()) %in% non_data_cols)] ) 
   })
   
   output$pca_plot <- renderPlot({

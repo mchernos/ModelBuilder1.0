@@ -5,18 +5,18 @@ shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
       # helpText('Hello, World'),
-      selectInput('predictand', 'Predictand', colnames(data)[-1:-3]),
-      
+      selectInput('predictand', 'Predictand',
+                    choices = colnames(data)[-1:-length(non_data_cols)]
+                  ),
       # Specification of range within an interval
       sliderInput("year_range", "Year Range:", step = 10,
                   1900,2060, c(1900,2060),
                   animate = TRUE,
-                  # min = min(data$Year), max = max(data$Year), 
-                  # value = c(min(data$Year), max(data$Year)),
                   sep=""),
       fluidRow(h5('Filter Based on Predictand Threshold:', align ='center'),
                column(6, numericInput("min_data", "Minimum:",0) ),
-               column(6, numericInput("max_data", "Minimum:", max(data) ) ) ),
+               column(6, numericInput("max_data", "Maximum:", 
+                                      max(data[-1:-length(non_data_cols)]) ) ) ),
       
       # Specify Aggregation Method (if any)
       selectInput('Aggregate',  label = 'Aggregate Data:', 
@@ -24,16 +24,11 @@ shinyUI(fluidPage(
                   selected = 'None', multiple = F),
       checkboxInput('code_zero', 'Code predictand 0s as "NA" '),
       checkboxInput('code_one', 'Code predictand 1s as "NA" '),
-      downloadButton('downloadLiveData', 'Download Subset Data')
-      # checkboxInput('log_transform', 'Log-Transform Predictand (Base 10)')
-      # checkboxInput('Aggregate', label = 'Aggregate Data by Annual Mean?'),
-      # checkboxInput('Sum', label = 'Aggregate Data by Annual Sum?')
-      # selectInput('x', 'Build a regression model of mpg against:',
-      # choices = names(mtcars)[-1]),
-      # radioButtons('format', 'Document format', c('PDF', 'HTML', 'Word'),
-      # inline = TRUE),
-      #       downloadButton('downloadReport')
+      downloadButton('downloadLiveData', 'Download Subset Data'),
+      uiOutput('region_subset')
     ),
+    
+    #### MAIN PANEL ####
     mainPanel(
       tabsetPanel(
         

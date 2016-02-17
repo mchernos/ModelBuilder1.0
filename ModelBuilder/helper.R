@@ -12,31 +12,7 @@ rm(x, packages)
 
 ############ LOAD FUNCTIONS ###################
 source('ModelBuilder/denscomp1.R') # Density histogram plot for interactive breaks
-
-# Fit Plot Function
-fit.plot = function(predictand, x){
-  
-  # Plot Predicted Model against Observed Values
-  plot(na.omit(predictand), x$fitted.values, pch = 19, 
-       xlab = 'Observed', ylab = 'Predicted',
-       col = rgb(0,0,0,0.6),
-       main = '')
-  mtext('Predicted vs. Observed', 3)
-  abline(0,1, col = 'red', lwd = 2)
-  
-  # Plot Residuals
-  plot(x$residuals, pch = 19, ylab = 'Residuals', 
-       col = rgb(0,0,0,0.6),
-       main = '')
-  mtext('Indexed Residuals', 3)
-  abline(h = 0, lwd = 2, lty = 2, col = 'red')
-}
-
-# Mode Function
-Mode <- function(x) {
-  ux <- unique(x)
-  ux[which.max(tabulate(match(x, ux)))]
-}
+source('ModelBuilder/fitfuncs.R') # Fit Functions
 
 ####################
 # Read in the Data #
@@ -46,19 +22,30 @@ filelist = list.files('ModelBuilder/Data', pattern = '*.csv')
 
 # Function to read in the Data
 read.data = function(filename){
-  temp = read.csv(paste0('ModelBuilder/Data/',filename)) %>%
-    gather(Year, Value, -row, -col)
+  temp = read.csv(paste0('ModelBuilder/Data/',filename))
+    if(colnames(temp)[1] == 'name'){
+      temp = gather(temp, Year, Value, -name)
+    }else {
+      temp = gather(temp, Year, Value, -row, -col) 
+      }
   temp$Year = gsub('X','',temp$Year)
-  colnames(temp)[4] = gsub('.csv', '',filename)
+  colnames(temp)[length(temp)] = gsub('.csv', '',filename)
   temp
 }
 
-# Read in and merge all datasets
-data = lapply(filelist, function(x) read.data(x)) %>%
-  Reduce(function(x,y) full_join(x,y, by = c('row', 'col', 'Year')), .) %>%
-  sample_n(2500)
+# Need to use as template for reading in all the rest of 'em
+temp = read.csv(paste0('ModelBuilder/Data/',filelist[1]))
+regionalized = (colnames(temp)[1] == 'name')
+if(regionalized){   non_data_cols = c('name', 'Year')
+  }else {           non_data_cols = c('row', 'col', 'Year') }
 
+# Read in and merge all datasets, Conditional on if data are regionalized
+  data = lapply(filelist, function(x) read.data(x)) %>%
+    Reduce(function(x,y) full_join(x,y, by = non_data_cols), .)
+
+  if(!regionalized){ data = data %>% sample_n(2500) }
+  
 data$Year = as.numeric(data$Year)
+rm(temp)
 
-# TEMP DATA
-# data = read.csv('Data/data2.csv')
+# END HELPER #
