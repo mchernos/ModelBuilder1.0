@@ -3,7 +3,7 @@ shinyServer(function(input, output) {
   # Regional Subset?
   output$region_subset <- renderUI({
     if(regionalized){
-      selectizeInput('regions', 'Regions', 
+      selectizeInput('regions', 'Regions:', 
                      choices = c('All', as.character(unique(data$name))),
                      selected = 'All',
                      multiple = T ) }
@@ -21,6 +21,11 @@ shinyServer(function(input, output) {
     if(input$code_one){
       data[,input$predictand] = ifelse(data[,input$predictand] == 1, NA, 
                                        data[,input$predictand] ) }
+    
+    # Select only certain regions
+    if(regionalized & !('All' %in% input$regions)){
+      data = data %>% filter(name %in% input$regions)
+    }
     
     # Conditional Aggregation Methods 
     if (input$Aggregate != 'None'){ 
@@ -57,11 +62,6 @@ shinyServer(function(input, output) {
     data = data %>% 
       filter(data[,input$predictand] >= input$min_data & 
                data[,input$predictand] <= input$max_data )
-    
-    # Select only certain regions
-    if(regionalized & !('All' %in% input$regions)){
-      data = data %>% filter(name %in% input$regions)
-    }
     
     # Return Data in data.frame() format with nice looking column names
     data = data.frame(data)

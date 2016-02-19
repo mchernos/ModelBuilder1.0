@@ -118,7 +118,8 @@ shinyUI(fluidPage(
                  plotOutput('pca_plot'),
                  h4('Output:'),
                  verbatimTextOutput('pca_summary') 
-        )
+        ),
+        tabPanel('About', includeMarkdown('../Readme.Rmd'))
       )
     )
   )

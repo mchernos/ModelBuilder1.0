@@ -1,0 +1,33 @@
+---
+title: "ModelBuilder1.0 Readme"
+author: "Matthew Chernos"
+date: "February 17, 2016"
+output: html_document
+---
+
+### Overview
+
+**ModelBuilder** version 1.0 is a statistical package designed for use with ALCES Online annual/decadal outputs. The program functions are written in **R** Statistical Software, and take advantage of many statistical, data manipulation, and graphics packages, while the graphical user interface and reactive elements are designed using **R Shiny** and the `shiny` package. 
+
+### Running ModelBuilder 1.0
+
+ModelBuilder 1.0 can be run offline; however it can also be configured to run remotely. The only requirement is that your machine has a working version of **R Statistical Software**, which can be installed through the [CRAN website](https://www.r-project.org/).
+
+To run ModelBuilder 1.0 offline, load your datasets into the `ModelBuilder/Data` folder. Ensure each file has a unique and recognizable name (each variable will be named based on the filename). Once the proper data files are placed in the folder, open the `app.R` script and run the code. Ensure that your working directory is set to `.../ModelBuilder1.0` (this should happen automatically if you open R by clicking on the `app.R` file). Alternatively, ModelBuilder can be run by opening R, setting your working directory, and running:
+``` r
+source('ModelBuilder/helper.R')
+runApp('ModelBuilder')
+```
+
+As an alternative, ModelBuilder 1.0 can be run remotely, over the internet. Ensure a recent version of R is installed, as well as the `shiny` package. ModelBuilder can be accessed by running the following code in the console:
+``` r
+library('shiny')
+runGitHub('ModelBuilder1.0','mchernos')
+```
+Using this version will not allow you to select a different dataset, and ModelBuilder will only run the demo data currently in the `Data` folder.
+
+### Usage
+
+
+
+
