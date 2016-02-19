@@ -1,7 +1,5 @@
 ---
 title: "ModelBuilder1.0 Readme"
-author: "Matthew Chernos"
-date: "February 17, 2016"
 output: html_document
 ---
 
@@ -22,12 +20,7 @@ runApp('ModelBuilder')
 As an alternative, ModelBuilder 1.0 can be run remotely, over the internet. Ensure a recent version of R is installed, as well as the `shiny` package. ModelBuilder can be accessed by running the following code in the console:
 ``` r
 library('shiny')
-runGitHub('ModelBuilder1.0','mchernos')
+runGitHub('ModelBuilder1.0','mchernos', subdir = '/ModelBuilder')
 ```
 Using this version will not allow you to select a different dataset, and ModelBuilder will only run the demo data currently in the `Data` folder.
-
-### Usage
-
-
-
 
