@@ -4,8 +4,12 @@ shinyUI(
    titlePanel('ALCES ModelBuilder 1.0 (BETA)'),
   sidebarLayout(
     sidebarPanel(
-      # helpText('Hello, World'),
-      selectInput('predictand', 'Predictand',
+      #helpText(h4('Subset Data')),
+      # Action Button to effectuate subsetting
+      actionButton("subsetButton", strong(h4("Update Data")), width = '100%'),
+      br(),
+      br(),
+      selectInput('predictand', 'Predictand:',
                     choices = colnames(data)[-1:-length(non_data_cols)]
                   ),
       # Specification of range within an interval
