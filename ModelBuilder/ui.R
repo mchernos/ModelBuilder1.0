@@ -16,7 +16,7 @@ shinyUI(
       fluidRow(h5('Filter Based on Predictand Threshold:', align ='center'),
                column(6, numericInput("min_data", "Minimum:",0) ),
                column(6, numericInput("max_data", "Maximum:", 
-                                      max(data[-1:-length(non_data_cols)]) ) ) ),
+                                      max(data[-1:-length(non_data_cols)], na.rm = T) ) ) ),
       
       # Specify Aggregation Method (if any)
       selectInput('Aggregate',  label = 'Aggregate Data:', 
@@ -81,7 +81,7 @@ shinyUI(
                  )
       ),
         
-      navbarMenu('Regressions',
+      navbarMenu('Statistics',
                  
         # MULTIPLE REGRESSION AUTOMATOR
         tabPanel('Automated Mutiple Regression', 
