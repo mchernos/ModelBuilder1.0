@@ -11,18 +11,22 @@ x = lapply(packages, require, character.only = T)
 rm(x, packages)
 
 ############ LOAD FUNCTIONS ###################
-source('ModelBuilder/denscomp1.R') # Density histogram plot for interactive breaks
-source('ModelBuilder/fitfuncs.R') # Fit Functions
+# source('ModelBuilder/denscomp1.R') # Density histogram plot for interactive breaks
+source(file.path('ModelBuilder', 'denscomp1.R'))
+# source('ModelBuilder/fitfuncs.R') # Fit Functions
+source(file.path('ModelBuilder', 'fitfuncs.R'))
 
 ####################
 # Read in the Data #
 ####################
 
-filelist = list.files('ModelBuilder/Data', pattern = '*.csv')
+# filelist = list.files('ModelBuilder/Data', pattern = '*.csv')
+filelist = list.files(file.path('ModelBuilder','Data'), pattern = '*.csv')
 
 # Function to read in the Data
 read.data = function(filename){
-  temp = read.csv(paste0('ModelBuilder/Data/',filename))
+  # temp = read.csv(paste0('ModelBuilder/Data/',filename))
+  temp = read.csv(file.path('ModelBuilder','Data',filename))
     if(colnames(temp)[1] == 'name'){
       temp = gather(temp, Year, Value, -name)
     }else {
@@ -34,7 +38,7 @@ read.data = function(filename){
 }
 
 # Need to use as template for reading in all the rest of 'em
-temp = read.csv(paste0('ModelBuilder/Data/',filelist[1]))
+temp = read.csv(file.path('ModelBuilder','Data',filelist[1]))
 regionalized = (colnames(temp)[1] == 'name')
 if(regionalized){   non_data_cols = c('name', 'Year')
   }else {           non_data_cols = c('row', 'col', 'Year') }

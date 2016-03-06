@@ -5,5 +5,5 @@
 #
 # Run the program by selecting and running the following code:
 
-source('ModelBuilder/helper.R')
+source(file.path('ModelBuilder', 'helper.R'))
 runApp('ModelBuilder')
