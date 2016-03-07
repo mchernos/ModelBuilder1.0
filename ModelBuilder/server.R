@@ -13,7 +13,7 @@ shinyServer(function(input, output) {
   # Aggregate Data #
   ##################
   # Only goes once subsetting is done
-  LiveData <- eventReactive(input$subsetButton, {
+  LiveData <- eventReactive(input$subsetButton | input$year_range, {
     
     # Code Value as NA
     if(input$code_zero){
