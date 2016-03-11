@@ -121,7 +121,7 @@ shinyUI(
                                         min = 0, max = 1, step = 0.01)),
                  column(6, uiOutput('loess_span')),
                  column(6, uiOutput('gam_family')),
-                 column(12, h5('Blue line corresponds to specified best fit, 
+                 column(12, h6('Blue line corresponds to specified best fit, 
                                while shaded areas correspond to specified 
                                confidence intervals of chosen fit')),
                  column(12, plotOutput('manual_plot') ),
