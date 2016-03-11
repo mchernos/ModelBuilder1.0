@@ -23,13 +23,16 @@ shinyUI(
                                       max(data[-1:-length(non_data_cols)], na.rm = T) ) ) ),
       
       # Specify Aggregation Method (if any)
-      selectInput('Aggregate',  label = 'Aggregate Data:', 
+      selectInput('Aggregate',  label = 'Calculate Central Tendency:', 
                   choices = c('None','Mean', 'Median', 'Sum'), 
                   selected = 'None', multiple = F),
       checkboxInput('code_zero', 'Code predictand 0s as "NA" '),
       checkboxInput('code_one', 'Code predictand 1s as "NA" '),
-      downloadButton('downloadLiveData', 'Download Subset Data'),
-      uiOutput('region_subset')
+      selectizeInput('params',label = 'Select Parameters:',
+                     choices = c('All',colnames(data)[!(colnames(data)%in% non_data_cols)]),
+                     selected = 'All', multiple = T),
+      uiOutput('region_subset'),
+      downloadButton('downloadLiveData', 'Download Subset Data')
     ),
     
     #### MAIN PANEL ####
@@ -113,9 +116,14 @@ shinyUI(
                                                    'Robust Linear' = 'rlm'),
                                        selected = 'loess') ),
                  column(6, selectInput('x_variable', 'Predictor (X Variable)', 
-                                       choices = names(data) )  ),
+                                       choices = names(data), selected = 'Year' )  ),
+                 column(6, numericInput('CI', 'Confidence Interval', 0.95, 
+                                        min = 0, max = 1, step = 0.01)),
                  column(6, uiOutput('loess_span')),
                  column(6, uiOutput('gam_family')),
+                 column(12, h5('Blue line corresponds to specified best fit, 
+                               while shaded areas correspond to specified 
+                               confidence intervals of chosen fit')),
                  column(12, plotOutput('manual_plot') ),
                  column(2, downloadButton('downloadTrendPlot')),
                  column(2, numericInput('TrendPlot_width', 'Plot Width:', value = 7, min = 1)),

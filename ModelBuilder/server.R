@@ -64,6 +64,9 @@ shinyServer(function(input, output) {
       filter(data[,input$predictand] >= input$min_data & 
                data[,input$predictand] <= input$max_data )
     
+    # Subset Parameters
+    if(!("All" %in% input$params)){  data = data[,c(non_data_cols, input$params)]}
+    
     # Return Data in data.frame() format with nice looking column names
     data = data.frame(data)
     colnames(data) = gsub('\\.',' ', colnames(data))
@@ -175,19 +178,21 @@ shinyServer(function(input, output) {
   
   # The Plot
   output$manual_plot <- renderPlot({ TrendPlot() })
+  
   TrendPlot <- reactive({
     p = ggplot( LiveData(), aes(x = get(input$x_variable), y = get(input$predictand))) + 
       labs(y = input$predictand, x = input$x_variable) + 
       theme_bw() + 
       stat_smooth(method = if(input$smooth_method == 'log' | input$smooth_method == 'exp'){
-        'lm'} else{input$smooth_method}, 
+          'lm'} else{input$smooth_method}, 
+        level = input$CI,
         span = input$loess_span,
         formula = if(input$smooth_method == 'log'){y~log10(x)}
-        else if(input$smooth_method == 'exp'){y~exp(x)}
-        else{y~x}, 
+          else if(input$smooth_method == 'exp'){y~exp(x)}
+          else{y~x}, 
         method.args = list(if(input$smooth_method == 'gam'){family=input$gam_family}else{NULL} )
       )
-
+    
     # Add Boxplot if x variables are names
     if(input$x_variable == 'name' ){
       p + geom_boxplot(fill = 'grey60') }else{ 

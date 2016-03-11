@@ -5,7 +5,7 @@ rm(list = ls())
 # Check for installed packages (install if need be)
 packages = c('shiny', 'dplyr', 'tidyr','corrplot', 'DT', 
              'MASS', 'ggplot2', 'Kendall', 'fitdistrplus', 
-             'e1071', 'relaimpo', 'mgcv')
+             'e1071', 'relaimpo', 'mgcv', 'rmarkdown')
 x = lapply(packages, function(x){if (!require(x, character.only = T)) install.packages(x)})
 x = lapply(packages, require, character.only = T)
 rm(x, packages)
