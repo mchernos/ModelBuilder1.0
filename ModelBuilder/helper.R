@@ -1,6 +1,6 @@
 # Alces Correlations to Riparian Health
 # Clean up workspace
-rm(list = ls())
+# rm(list = ls())
 
 # Check for installed packages (install if need be)
 packages = c('shiny', 'dplyr', 'tidyr','corrplot', 'DT', 
@@ -25,7 +25,7 @@ filelist = list.files(file.path('ModelBuilder','Data'), pattern = '*.csv')
 
 # Function to read in the Data
 read.data = function(filename){
-  # temp = read.csv(paste0('ModelBuilder/','Data/',filename))
+  # temp = read.csv(paste0('Data/',filename))
   temp = read.csv(file.path('ModelBuilder','Data',filename))
     if(colnames(temp)[1] == 'name'){
       temp = gather(temp, Year, Value, -name)
