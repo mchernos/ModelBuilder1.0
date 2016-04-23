@@ -1,3 +1,6 @@
+# Add Helpers
+source('ModelBuilder/helper.R')
+
 shinyServer(function(input, output) {
   
   # Regional Subset?
