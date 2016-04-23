@@ -5,5 +5,5 @@
 #
 # Run the program by selecting and running the following code:
 
-source(file.path('ModelBuilder', 'helper.R'))
-runApp('ModelBuilder')
+# source(file.path('ModelBuilder', 'helper.R'))
+shiny::runApp('ModelBuilder')

@@ -1,5 +1,5 @@
 # Add Helpers
-# source('ModelBuilder/helper.R')
+source('helper.R')
 
 shinyServer(function(input, output) {
   
